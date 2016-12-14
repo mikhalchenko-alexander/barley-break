@@ -62,6 +62,22 @@ public class Game : MonoBehaviour {
 					field [tileIndex] = 0;
 				}
 			}
+            else if (tileCol == zeroCol)
+            {
+                if (tileRow == zeroRow + 1)
+                {
+                    Vector3 p = tiles[tileNum - 1].transform.position;
+                    tiles[tileNum - 1].transform.position = new Vector3(p.x, p.y + 3.5f, p.z);
+                    field[zeroIndex] = field[tileIndex];
+                    field[tileIndex] = 0;
+                } else if (tileRow == zeroRow - 1)
+                {
+                    Vector3 p = tiles[tileNum - 1].transform.position;
+                    tiles[tileNum - 1].transform.position = new Vector3(p.x, p.y - 3.5f, p.z);
+                    field[zeroIndex] = field[tileIndex];
+                    field[tileIndex] = 0;
+                }
+            }
 
 		}
 	}
