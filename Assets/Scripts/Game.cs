@@ -137,48 +137,27 @@ public class Game : MonoBehaviour {
 			int zeroRow = zeroIndex / 4;
 			int zeroCol = zeroIndex % 4;
 
+			movingTile = tile;
+			Vector3 p = movingTile.transform.position;
+
 			if (tileRow == zeroRow)
 			{
 				if (tileCol == zeroCol + 1)
-				{
-					movingTile = tile;
-					Vector3 p = movingTile.transform.position;
 					tileTarget = new Vector3(p.x - tileSize, p.y, p.z);
-					moving = true;
-					field[zeroIndex] = field[tileIndex];
-					field[tileIndex] = 0;
-				}
 				else if (tileCol == zeroCol - 1)
-				{
-					movingTile = tile;
-					Vector3 p = movingTile.transform.position;
 					tileTarget = new Vector3(p.x + tileSize, p.y, p.z);
-					moving = true;
-					field[zeroIndex] = field[tileIndex];
-					field[tileIndex] = 0;
-				}
 			}
 			else if (tileCol == zeroCol)
 			{
 				if (tileRow == zeroRow + 1)
-				{
-					movingTile = tile;
-					Vector3 p = movingTile.transform.position;
 					tileTarget = new Vector3(p.x, p.y + tileSize, p.z);
-					moving = true;
-					field[zeroIndex] = field[tileIndex];
-					field[tileIndex] = 0;
-				}
 				else if (tileRow == zeroRow - 1)
-				{
-					movingTile = tile;
-					Vector3 p = movingTile.transform.position;
 					tileTarget = new Vector3(p.x, p.y - tileSize, p.z);
-					moving = true;
-					field[zeroIndex] = field[tileIndex];
-					field[tileIndex] = 0;
-				}
 			}
+
+			moving = true;
+			field[zeroIndex] = field[tileIndex];
+			field[tileIndex] = 0;
 		}
 
 		if (moving)
