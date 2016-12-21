@@ -2,57 +2,45 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using AssemblyCSharp;
 
 public class Game : MonoBehaviour {
 
-	private GameObject[] tiles;
 	private int[] field;
-    private float tileSize = 2.5f;
     private GameObject youWin;
-    private GameObject tilesContainer;
+	private int SHUFFLE_COUNT = 200;
+	private TileManager tileManager;
 
-	private GameObject movingTile;
-	private Vector3 tileTarget;
-	private bool moving = false;
-
-    // Use this for initialization
     void Start () {
-		tiles = GameObject.FindGameObjectsWithTag("tile");
-		Array.Sort (tiles,
-			delegate(GameObject a, GameObject b) {
-				return tileNumber(a.name) - tileNumber(b.name);
-			});
 		field = new int[16];
 		for (int i = 1; i < 16; i++)
 			field [i - 1] = i;
 
         youWin = GameObject.FindGameObjectWithTag("youwin");
         youWin.SetActive(false);
-        tilesContainer = GameObject.FindGameObjectWithTag("tiles");
+		tileManager = new TileManager (
+			GameObject.FindGameObjectsWithTag("tile"), 
+			GameObject.FindGameObjectWithTag("tiles")
+		);
 
         newGame();
     }
-	
-	// Update is called once per frame
-	void Update () {
-		if (moving) {
-			bool moved = move (movingTile, false);
-			if (moved && isWin ()) {
-				tilesContainer.SetActive (false);
-				youWin.SetActive (true);
-			}
-		} else if (Input.GetMouseButtonDown(0)) {
-			RaycastHit hit;
-			if (!Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit) && !moving) return;
-			GameObject obj = hit.collider.gameObject.transform.parent.gameObject;
-			if (obj.tag == "tile" && !moving) {
-				GameObject tile = obj;
-				bool moved = move (tile, false);
 
-				if (moved && isWin ()) {
-					tilesContainer.SetActive (false);
-					youWin.SetActive (true);
-				}
+	void Update () {
+		if (tileManager.isMoving()) {
+			tileManager.Update ();
+		}
+		else if(isWin()) {
+			tileManager.hide();
+			youWin.SetActive (true);
+		}
+		else if (Input.GetMouseButtonDown(0)) {
+			RaycastHit hit;
+			if (!Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit)) return;
+			GameObject obj = hit.collider.gameObject.transform.parent.gameObject;
+			if (obj.tag == "tile") {
+				GameObject tile = obj;
+				move (tile, false);
 			}
 		}
 	}
@@ -75,8 +63,7 @@ public class Game : MonoBehaviour {
     {
         List<KeyValuePair<int, int>> validMoves = new List<KeyValuePair<int, int>>();
         System.Random rnd = new System.Random();
-		int fact = 0;
-		for (int i = 0; i < 200; i++)
+		for (int i = 0; i < SHUFFLE_COUNT; i++)
         {
             int zeroIndex = -1;
             for (int j = 0; j < 16; j++)
@@ -98,13 +85,24 @@ public class Game : MonoBehaviour {
             KeyValuePair<int, int> validMove = validMoves[random];
             int idx = validMove.Key * 4 + validMove.Value;
             int tileNumber = field[idx];
-            GameObject tile = tiles[tileNumber - 1];
-            move(tile, true);
+
+			field[zeroIndex] = field[idx];
+			field[idx] = 0;
+
+			if (validMove.Key > zeroX) {
+				tileManager.move(tileNumber, TileManager.Direction.TOP, true);
+			} else if (validMove.Key < zeroX) {
+				tileManager.move(tileNumber, TileManager.Direction.BOTTOM, true);
+			} else if (validMove.Value > zeroY) {
+				tileManager.move(tileNumber, TileManager.Direction.LEFT, true);
+			} else if (validMove.Value < zeroY) {
+				tileManager.move(tileNumber, TileManager.Direction.RIGHT, true);
+			}
 
             validMoves.Clear();
         }
         youWin.SetActive(false);
-        tilesContainer.SetActive(true);
+		tileManager.show();
     }
 
     public void exit()
@@ -112,74 +110,44 @@ public class Game : MonoBehaviour {
         Application.Quit();
     }
 
-	private bool move(GameObject tile, bool immediate)
+	private void move(GameObject tile, bool immediate)
     {
 		int tileNum = tileNumber(tile.name);
-        bool moved = false;
-
-		if (!moving)
+		int tileIndex = -1;
+		int zeroIndex = -1;
+		for (int i = 0; i < 16; i++)
 		{
-			int tileIndex = -1;
-			int zeroIndex = -1;
-			for (int i = 0; i < 16; i++)
-			{
-				if (field[i] == tileNum)
-					tileIndex = i;
-				if (field[i] == 0)
-					zeroIndex = i;
-				if (tileIndex >= 0 && zeroIndex >= 0)
-					break;
-			}
-
-			int tileRow = tileIndex / 4;
-			int tileCol = tileIndex % 4;
-
-			int zeroRow = zeroIndex / 4;
-			int zeroCol = zeroIndex % 4;
-
-			movingTile = tile;
-			Vector3 p = movingTile.transform.position;
-
-			if (tileRow == zeroRow)
-			{
-				if (tileCol == zeroCol + 1)
-					tileTarget = new Vector3(p.x - tileSize, p.y, p.z);
-				else if (tileCol == zeroCol - 1)
-					tileTarget = new Vector3(p.x + tileSize, p.y, p.z);
-			}
-			else if (tileCol == zeroCol)
-			{
-				if (tileRow == zeroRow + 1)
-					tileTarget = new Vector3(p.x, p.y + tileSize, p.z);
-				else if (tileRow == zeroRow - 1)
-					tileTarget = new Vector3(p.x, p.y - tileSize, p.z);
-			}
-
-			moving = true;
-			field[zeroIndex] = field[tileIndex];
-			field[tileIndex] = 0;
+			if (field[i] == tileNum)
+				tileIndex = i;
+			if (field[i] == 0)
+				zeroIndex = i;
+			if (tileIndex >= 0 && zeroIndex >= 0)
+				break;
 		}
 
-		if (moving)
-		{
-			if (immediate) {
-				movingTile.transform.position = tileTarget;
-				moving = false;
-				moved = true;
-			} else {
-				Vector3 currentTilePos = movingTile.transform.position;
+		int tileRow = tileIndex / 4;
+		int tileCol = tileIndex % 4;
 
-				if (Vector3.Distance (tileTarget, currentTilePos) > 0.00001) {
-					movingTile.transform.position = Vector3.MoveTowards (currentTilePos, tileTarget, Time.deltaTime * 10);
-				} else {
-					movingTile.transform.position = tileTarget;
-					moving = false;
-					moved = true;
-				}
-			}
+		int zeroRow = zeroIndex / 4;
+		int zeroCol = zeroIndex % 4;
+
+		if (tileRow == zeroRow)
+		{
+			if (tileCol == zeroCol + 1)
+				tileManager.move (tileNum, TileManager.Direction.LEFT, false);
+			else if (tileCol == zeroCol - 1)
+				tileManager.move (tileNum, TileManager.Direction.RIGHT, false);
+		}
+		else if (tileCol == zeroCol)
+		{
+			if (tileRow == zeroRow + 1)
+				tileManager.move (tileNum, TileManager.Direction.TOP, false);
+			else if (tileRow == zeroRow - 1)
+				tileManager.move (tileNum, TileManager.Direction.BOTTOM, false);
 		}
 
-        return moved;
-    }
+		field[zeroIndex] = field[tileIndex];
+		field[tileIndex] = 0;
+	}
 
 }
