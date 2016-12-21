@@ -26,7 +26,7 @@ namespace AssemblyCSharp
 
 		public enum Direction 
 		{
-			LEFT, RIGHT, TOP, BOTTOM
+			LEFT, RIGHT, TOP, BOTTOM, NONE
 		}
 
 		public TileManager (GameObject[] tiles, GameObject tilesContainer)

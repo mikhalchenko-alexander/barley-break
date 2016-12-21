@@ -131,23 +131,28 @@ public class Game : MonoBehaviour {
 		int zeroRow = zeroIndex / 4;
 		int zeroCol = zeroIndex % 4;
 
+		TileManager.Direction direction = TileManager.Direction.NONE;
 		if (tileRow == zeroRow)
 		{
-			if (tileCol == zeroCol + 1)
-				tileManager.move (tileNum, TileManager.Direction.LEFT, false);
-			else if (tileCol == zeroCol - 1)
-				tileManager.move (tileNum, TileManager.Direction.RIGHT, false);
+			if (tileCol == zeroCol + 1) {
+				direction = TileManager.Direction.LEFT;
+			} else if (tileCol == zeroCol - 1) {
+				direction = TileManager.Direction.RIGHT;
+			}
 		}
 		else if (tileCol == zeroCol)
 		{
-			if (tileRow == zeroRow + 1)
-				tileManager.move (tileNum, TileManager.Direction.TOP, false);
-			else if (tileRow == zeroRow - 1)
-				tileManager.move (tileNum, TileManager.Direction.BOTTOM, false);
+			if (tileRow == zeroRow + 1) {
+				direction = TileManager.Direction.TOP;
+			} else if (tileRow == zeroRow - 1) {
+				direction = TileManager.Direction.BOTTOM;
+			}
 		}
-
-		field[zeroIndex] = field[tileIndex];
-		field[tileIndex] = 0;
+		if (direction != TileManager.Direction.NONE) {
+			tileManager.move (tileNum, direction, false);
+			field [zeroIndex] = field [tileIndex];
+			field [tileIndex] = 0;
+		}
 	}
 
 }
