@@ -11,7 +11,7 @@ namespace AssemblyCSharp
 		private static float tileSize = 2.5f;
 		private MovingTile movingTile;
 		private bool moving;
-		private int moveSpeed = 10;
+		private int moveSpeed = 40;
 
 		struct MovingTile {
 			public GameObject tile;
